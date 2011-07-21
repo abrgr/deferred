@@ -74,6 +74,18 @@ Deferred.prototype.promise = function() {
     };
 };
 
+Deferred.prototype.guard = function(ctx, blockToGuard) {
+    if ( !_.isFunction(blockToGuard) ) {
+        throw new Error('Deferred.guard requires a function as a parameter.  Received a ' + typeof(blockToGuard));
+    }
+
+    try {
+        blockToGuard.apply(ctx, Array.prototype.slice.call(arguments, 2));
+    } catch ( err ) {
+        this.reject(err);
+    }
+};
+
 Deferred.afterAll = function(promises) {
     if ( !_.isArray(promises) ) {
         throw new Error('afterAll requires an array of promises');
@@ -82,10 +94,11 @@ Deferred.afterAll = function(promises) {
     var args = [];
 
     var deferred = new Deferred();
-    promises.forEach(function(promise) {
+    var returnCount = 0;
+    promises.forEach(function(promise, idx) {
         promise.success(function() {
-            args.push(arguments);
-            if ( args.length === promises.length ) {
+            args[idx] = arguments;
+            if ( (++returnCount) === promises.length ) {
                 deferred.resolve(args);
             }
         }).fail(function() {
