@@ -39,7 +39,7 @@ Deferred.prototype._fireCallbacks = function(cbs, success, args) {
             this._success = success;
             this._firing = true;
 
-            while ( cbs[0] ) {
+            while ( cbs.length > 0 ) {
                 try {
                     cbs.shift().apply(this, this._args);
                 } catch (e) {

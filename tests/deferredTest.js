@@ -18,6 +18,49 @@ module.exports.testSimple = function(test) {
     d.resolve(expected);
 };
 
+module.exports.testMultipleSuccesses = function(test) {
+    var expected = 'abc';
+
+    var d = new D();
+
+	test.expect(2);
+    d.success(function(arg) {
+        test.deepEqual(arg, expected);
+    }).success(function(arg) {
+		test.deepEqual(arg, expected);
+        test.done();
+	}).fail(failTest.bind(test));
+
+    d.resolve(expected);
+};
+
+module.exports.testSimpleWithArray = function(test) {
+    var expected1 = ['abc', 'def'];
+    var expected2 = ['ghi', 34];
+
+    var d = new D();
+    d.success(function(arg1, arg2) {
+        test.deepEqual(arg1, expected1);
+        test.deepEqual(arg2, expected2);
+        test.done();
+    }).fail(failTest.bind(test));
+
+    d.resolve(expected1, expected2);
+};
+
+module.exports.testSimpleExPostWithArray = function(test) {
+    var expected1 = ['abc', 'def'];
+    var expected2 = ['ghi', 34];
+
+    var d = new D();
+    d.resolve(expected1, expected2);
+    d.success(function(arg1, arg2) {
+        test.deepEqual(arg1, expected1);
+        test.deepEqual(arg2, expected2);
+        test.done();
+    }).fail(failTest.bind(test));
+};
+
 module.exports.testExPostSimple = function(test) {
     var expected = 'abc';
 
@@ -51,6 +94,24 @@ module.exports.testSimpleFail = function(test) {
         test.deepEqual(arg, expected);
         test.done();
     });
+
+    d.reject(expected);
+};
+
+module.exports.testMultipleFail = function(test) {
+    var expected = 'abc';
+
+    var d = new D();
+
+	test.expect(2);
+
+    d.success(test.fail.bind(test))
+     .fail(function(arg) {
+        test.deepEqual(arg, expected);
+    }).fail(function(arg) {
+        test.deepEqual(arg, expected);
+        test.done();
+	});
 
     d.reject(expected);
 };
