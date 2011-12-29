@@ -24,6 +24,7 @@ Deferred.prototype.__defineGetter__('chainedResolve', function() {
 });
 
 Deferred.prototype.reject = function() {
+    console.log(arguments.caller, 'called reject');
     return this._fireCallbacks(this._failureCbs, false, Array.prototype.slice.call(arguments));
 };
 
@@ -112,7 +113,8 @@ Deferred.prototype.guard = function(ctx, blockToGuard) {
     }
 };
 
-Deferred.afterAll = function(promises) {
+
+Deferred.prototype.afterAll = function(promises) {
     if ( !_.isArray(promises) ) {
         throw new Error('afterAll requires an array of promises');
     }
@@ -120,10 +122,10 @@ Deferred.afterAll = function(promises) {
     var args = [];
 
     if ( promises.length < 1 ) {
-        return Deferred.resolved(args);
+        return this.resolve(args);
     }
 
-    var deferred = new Deferred();
+    var deferred = this;
     var returnCount = 0;
     
     promises.forEach(function(promise, idx) {
@@ -136,6 +138,41 @@ Deferred.afterAll = function(promises) {
             deferred.reject(Array.prototype.slice.call(arguments));
         });
     });
+
+    return this.promise();
+};
+
+Deferred.afterAll = function(promises) {
+    return (new Deferred()).afterAll(promises);
+};
+
+Deferred.afterAllSeq = function(fns) {
+    if ( !_.isArray(fns) ) {
+        throw new Error('afterAll requires an array of functions');
+    }
+
+    var args = [];
+
+    if ( fns.length < 1 ) {
+        return Deferred.resolved(args);
+    }
+
+    var deferred = new Deferred();
+    var returnCount = 0;
+    
+    function executeNextFunction() {
+        var fn = fns.shift();
+        if ( !!fn ) {
+            fn().success(function() {
+                args.push(Array.prototype.slice.call(arguments));
+                executeNextFunction();
+            }).fail(function() {
+                deferred.reject(Array.prototype.slice.call(arguments));
+            });
+        } else {
+            deferred.resolve(args);
+        }
+    }
 
     return deferred.promise();
 };
