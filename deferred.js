@@ -1,4 +1,5 @@
-var _ = require('underscore');
+var _ = require('underscore'),
+    log = require('log4js').getLogger('deferred');
 
 var Deferred = module.exports = function(name) {
     if ( !!name ) {
@@ -24,7 +25,7 @@ Deferred.prototype.__defineGetter__('chainedResolve', function() {
 });
 
 Deferred.prototype.reject = function() {
-    console.log(arguments.caller, 'called reject');
+    log.error(arguments.caller, 'called reject');
     return this._fireCallbacks(this._failureCbs, false, Array.prototype.slice.call(arguments));
 };
 
@@ -51,7 +52,7 @@ Deferred.prototype._fireCallbacks = function(cbs, success, args) {
                     } else {
                         exceptionStr = e.toString();
                     }
-                    console.error('exception thrown in callback for [' + this.name + ']:', exceptionStr);
+                    log.error('exception thrown in callback for [' + this.name + ']:', exceptionStr);
                 }
             }
         } finally {
