@@ -25,7 +25,10 @@ Deferred.prototype.__defineGetter__('chainedResolve', function() {
 });
 
 Deferred.prototype.reject = function() {
-    log.error(arguments.caller, 'called reject');
+    var err = new Error(),
+        caller = err.stack.split('\n')[2].replace('at', '').trim();
+    
+    log.error(caller + ' called reject');
     return this._fireCallbacks(this._failureCbs, false, Array.prototype.slice.call(arguments));
 };
 
@@ -110,6 +113,7 @@ Deferred.prototype.guard = function(ctx, blockToGuard) {
     try {
         blockToGuard.apply(ctx, Array.prototype.slice.call(arguments, 2));
     } catch ( err ) {
+        log.error(err);
         this.reject(err);
     }
 };
