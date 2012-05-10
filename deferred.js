@@ -147,8 +147,44 @@ Deferred.prototype.afterAll = function(promises) {
     return this.promise();
 };
 
+Deferred.prototype.forgivingAfterAll = function(promises) {
+    if ( !_.isArray(promises) ) {
+        throw new Error('forgivingAfterAll requires an array of promises');
+    }
+
+    var args = [];
+
+    if ( promises.length < 1 ) {
+        return this.resolve(args);
+    }
+
+    var deferred = this;
+    var returnCount = 0;
+    
+    promises.forEach(function(promise, idx) {
+        promise.success(function() {
+            args[idx] = Array.prototype.slice.call(arguments);
+            if ( (++returnCount) === promises.length ) {
+                deferred.resolve(args);
+            }
+        }).fail(function() {
+            args[idx] = undefined;
+            log.error('Error in forgivingAfterAll', Array.prototype.slice.call(arguments));
+            if ( (++returnCount) === promises.length ) {
+                deferred.resolve(args);
+            }
+        });
+    });
+
+    return this.promise();
+};
+
 Deferred.afterAll = function(promises) {
     return (new Deferred()).afterAll(promises);
+};
+
+Deferred.forgivingAfterAll = function(promises) {
+    return (new Deferred()).forgivingAfterAll(promises);
 };
 
 Deferred.afterAllSeq = function(fns) {
