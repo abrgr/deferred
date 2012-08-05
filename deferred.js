@@ -49,13 +49,7 @@ Deferred.prototype._fireCallbacks = function(cbs, success, args) {
                     cbs.shift().apply(this, this._args);
                 } catch (e) {
                     //TODO: what should we do here?
-                    var exceptionStr = '';
-                    if ( e instanceof Error ) {
-                        exceptionStr = e.message + '\n' + e.stack;
-                    } else {
-                        exceptionStr = e.toString();
-                    }
-                    log.error('exception thrown in callback for [' + this.name + ']:', exceptionStr);
+                    log.error('exception thrown in callback for [' + this.name + ']:', e);
                 }
             }
         } finally {
