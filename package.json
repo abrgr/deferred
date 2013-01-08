@@ -1,6 +1,6 @@
 {
     "name": "deferred"
-  , "version": "0.0.1"
+  , "version": "0.2.1"
   , "private": true
   , "dependencies": {
       "underscore": "1.1.6"
