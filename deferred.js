@@ -8,6 +8,7 @@ var Deferred = module.exports = function(name) {
         this.name = Deferred.caller.name;
     }
 
+    this._domain = process.domain;
     this._fired = false;
     this._firing = false;
     this._successCbs = [];
@@ -39,6 +40,10 @@ Deferred.prototype.__defineGetter__('chainedReject', function() {
 Deferred.prototype._fireCallbacks = function(cbs, success, args) {
     if ( !(this._firing || this._fired) ) {
         try {
+            if ( this._domain ) {
+                this._domain.enter();
+            }
+
             // _args and _success must be set before _firing
             this._args = Array.prototype.slice.call(args);
             this._success = success;
@@ -55,6 +60,9 @@ Deferred.prototype._fireCallbacks = function(cbs, success, args) {
         } finally {
             this._fired = true;
             this._firing = false;
+            if ( this._domain ) {
+                this._domain.exit();
+            }
         }
     }
 
@@ -66,8 +74,16 @@ Deferred.prototype.success = function(cb) {
         this._successCbs.push(cb);
     } else if ( this._success === true ) {
         // already firing or fired
+        if ( this._domain ) {
+            this._domain.enter();
+        }
+
         //TODO: we may be mid-firing so this may be out of order
         cb.apply(this, this._args);
+
+        if ( this._domain ) {
+            this._domain.exit();
+        }
     }
 
     return this;
@@ -78,8 +94,16 @@ Deferred.prototype.fail = function(cb) {
         this._failureCbs.push(cb);
     } else if ( this._success === false ) {
         // already firing or fired
+        if ( this._domain ) {
+            this._domain.enter();
+        }
+
         //TODO: we may be mid-firing so this may be out of order
         cb.apply(this, this._args);
+
+        if ( this._domain ) {
+            this._domain.exit();
+        }
     }
 
     return this;
@@ -105,13 +129,20 @@ Deferred.prototype.guard = function(ctx, blockToGuard) {
     }
 
     try {
+        if ( this._domain ) {
+            this._domain.enter();
+        }
+
         blockToGuard.apply(ctx, Array.prototype.slice.call(arguments, 2));
     } catch ( err ) {
         log.error(err);
         this.reject(err);
+    } finally {
+        if ( this._domain ) {
+            this._domain.exit();
+        }
     }
 };
-
 
 Deferred.prototype.afterAll = function(promises) {
     if ( !_.isArray(promises) ) {
